@@ -8,4 +8,4 @@ huggingface-hub==0.20.3
 transformers==4.36.2
 torch==2.1.2
 sentence-transformers==2.2.2
-
+python-telegram-bot==20.7

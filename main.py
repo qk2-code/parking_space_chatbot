@@ -26,6 +26,7 @@ from guardrails import (
     InputValidator, PII_Detector, PII_Masker, ResponseGuard
 )
 from entity_extraction import ReservationEntityExtractor
+from admin_agent import init_admin_agent, send_reservation_notification_sync
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -39,6 +40,7 @@ class ParkingChatbot:
 
         init_database()
         PricingManager.init_default_rates()
+        init_admin_agent()
 
         self.llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 
@@ -132,6 +134,8 @@ answer:"""
                 "status": "duplicate",
                 "message": "A reservation for this vehicle on this date and time already exists."
             }
+
+        send_reservation_notification_sync(reservation_id)
 
         AuditLog.log_interaction(
             action="reservation_created",

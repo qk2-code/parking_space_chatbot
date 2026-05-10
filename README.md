@@ -21,3 +21,4 @@ setup:
    - ADMIN_TELEGRAM_ID=your_admin_chat_id
 3. Run the main chatbot: python main.py
 4. in a separate terminal, run the admin bot: python admin_bot.py
+5. in a separate terminal, run the mcp server: python mcp_server.py

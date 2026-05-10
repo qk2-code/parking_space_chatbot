@@ -15,8 +15,10 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.tools import Tool
 from typing import Dict, Tuple
 import logging
+import sqlite3
 
 from database import (
     init_database, ReservationManager, PricingManager,
@@ -47,6 +49,9 @@ class ParkingChatbot:
         # Setup RAG system (static data from vector DB)
         self.rag_chain = self._setup_rag_system(data_file)
 
+        # Setup database connection for queries
+        self.mcp_tools = []
+        self._setup_mcp_connection()
 
         logger.info("✓ Chatbot initialized successfully!")
 
@@ -73,15 +78,15 @@ class ParkingChatbot:
         )
         retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-        template = """You are a helpful parking space assistant for Smart City Park.
-Use the provided context to answer questions about parking.
-If the answer is not in the context, say "I don't have information about that. Please contact our support."
-Be friendly and informative. Respond in the same language as the question.
+        template = """Ви — помічник із паркування для сервісу Smart City Park.
+Використовуйте наданий контекст, щоб відповідати на запитання щодо паркування.
+Якщо відповіді немає в контексті, скажіть: «У мене немає інформації з цього приводу. Зверніться до нашої служби підтримки».
+Будьте ввічливими та надавайте вичерпну інформацію. Відповідайте тією ж мовою, якою поставлено запитання.
 
-context: {context}
-question: {question}
+контекст: {context}
+запитання: {question}
 
-answer:"""
+відповідь:"""
 
         prompt = ChatPromptTemplate.from_template(template)
 
@@ -94,6 +99,43 @@ answer:"""
 
         logger.info("✓ RAG system ready (static data from vector DB)")
         return rag_chain
+
+    def _setup_mcp_connection(self):
+        """Initialize database connection for reservation queries"""
+        try:
+            logger.info("Setting up database connection...")
+
+            def query_reservations():
+                """Fetch all parking reservations from the database."""
+                try:
+                    conn = sqlite3.connect('parking_data.db')
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM reservations")
+                    rows = cursor.fetchall()
+                    conn.close()
+
+                    if not rows:
+                        return "No reservations found."
+
+                    result = "Reservations:\n\n"
+                    for row in rows:
+                        result += f"ID: {row[0]}, Customer: {row[1]}, Plate: {row[2]}, Date: {row[3]}, Time: {row[4]}, Duration: {row[5]} hours\n"
+                    return result
+                except Exception as e:
+                    logger.error(f"Database query error: {e}")
+                    return f"Error querying database: {str(e)}"
+
+            self.mcp_tools = [
+                Tool(
+                    name="get_reservations",
+                    description="Fetch and display all parking reservations from the database.",
+                    func=query_reservations
+                )
+            ]
+            logger.info("✓ Database connection ready")
+        except Exception as e:
+            logger.warning(f"Database setup failed: {e}")
+            self.mcp_tools = []
 
     def validate_input(self, user_input: str) -> Tuple[bool, Dict]:
         """Validate user input for safety and relevance"""
@@ -176,14 +218,24 @@ answer:"""
         if any(word in user_input.lower() for word in ["броню", "бронюю", "booking", "резерв", "reserve", "place"]):
             return self.process_reservation_request(user_input)
 
-        # Step 3: Query RAG system for static information
+        # Step 3: Check if user is asking to view database/reservations
+        if any(word in user_input.lower() for word in ["print", "show", "display", "list", "data", "database", "резервування", "дані"]):
+            if self.mcp_tools:
+                try:
+                    result = self.mcp_tools[0].func()
+                    return result
+                except Exception as e:
+                    logger.error(f"Database query error: {e}")
+                    return "Unable to retrieve database data at this moment."
+
+        # Step 4: Query RAG system for static information
         try:
             bot_response = self.rag_chain.invoke(user_input)
         except Exception as e:
             logger.error(f"RAG chain error: {e}")
             bot_response = "Sorry, I encountered an error processing your question. Please try again."
 
-        # Step 4: Apply guard rails - DON'T mask names in bot responses (only mask license plates/phones/emails)
+        # Step 5: Apply guard rails - DON'T mask names in bot responses (only mask license plates/phones/emails)
         # Keep bot responses readable - only mask actual sensitive data, not legitimate content
         protected_response = ResponseGuard.sanitize_response(
             bot_response,
@@ -191,7 +243,7 @@ answer:"""
             include_disclaimers=False
         )
 
-        # Step 5: Log interaction
+        # Step 6: Log interaction
         AuditLog.log_interaction(
             action="query_response",
             user_input=user_input,

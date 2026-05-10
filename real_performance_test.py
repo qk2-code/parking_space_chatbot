@@ -70,7 +70,6 @@ class PerformanceTest:
             print(f"No hallucination: {no_hallucination}")
 
             result = {
-                "test_name": test["name"],
                 "question": test["question"],
                 "response": response_text,
                 "response_time_ms": response_time,
@@ -147,7 +146,6 @@ class PerformanceTest:
             print(f"Consistency score: {consistency_score:.2f}")
 
             result = {
-                "test_name": test["name"],
                 "question": test["question"],
                 "response": response_text,
                 "response_time_ms": response_time,
@@ -229,7 +227,6 @@ class PerformanceTest:
     def export_results(self, filename: str = "performance_results.txt"):
         with open(filename, "w", encoding="utf-8") as f:
             for i, result in enumerate(self.results, 1):
-                f.write(f"Test {i}: {result['test_name']}\n")
                 f.write(f"Question: {result.get('question', 'N/A')}\n")
                 f.write(f"Response: {result['response'][:200]}...\n")
                 f.write(f"Response time: {result['response_time_ms']:.2f}ms\n")

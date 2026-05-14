@@ -29,6 +29,7 @@ from guardrails import (
 )
 from entity_extraction import ReservationEntityExtractor
 from admin_agent import init_admin_agent, send_reservation_notification_sync
+from main_langgraph import ParkingChatbotOrchestrator
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -52,7 +53,7 @@ class ParkingChatbot:
         # Setup database connection for queries
         self.mcp_tools = []
         self._setup_mcp_connection()
-
+        self.orchestrator = ParkingChatbotOrchestrator(self)
         logger.info("✓ Chatbot initialized successfully!")
 
     def _setup_rag_system(self, file_path: str):
@@ -196,63 +197,8 @@ class ParkingChatbot:
         }
 
     def chat(self, user_input: str) -> str:
-        """Main chatbot interaction method"""
-
-        # Step 1: Validate input for safety
-        is_valid, validation = self.validate_input(user_input)
-
-        if not is_valid:
-            AuditLog.log_interaction(
-                action="invalid_input",
-                user_input=user_input,
-                bot_response="Invalid input detected",
-                contains_pii=validation.get("contains_pii", False)
-            )
-
-            if validation.get("contains_malicious"):
-                return "I cannot process this request. Please ask a legitimate parking-related question."
-
-            return validation.get("warning_message", "I'm unable to process your request.")
-
-        # Step 2: Check if this is a reservation request
-        if any(word in user_input.lower() for word in ["броню", "бронюю", "booking", "резерв", "reserve", "place"]):
-            return self.process_reservation_request(user_input)
-
-        # Step 3: Check if user is asking to view database/reservations
-        if any(word in user_input.lower() for word in ["print", "show", "display", "list", "data", "database", "резервування", "дані"]):
-            if self.mcp_tools:
-                try:
-                    result = self.mcp_tools[0].func()
-                    return result
-                except Exception as e:
-                    logger.error(f"Database query error: {e}")
-                    return "Unable to retrieve database data at this moment."
-
-        # Step 4: Query RAG system for static information
-        try:
-            bot_response = self.rag_chain.invoke(user_input)
-        except Exception as e:
-            logger.error(f"RAG chain error: {e}")
-            bot_response = "Sorry, I encountered an error processing your question. Please try again."
-
-        # Step 5: Apply guard rails - DON'T mask names in bot responses (only mask license plates/phones/emails)
-        # Keep bot responses readable - only mask actual sensitive data, not legitimate content
-        protected_response = ResponseGuard.sanitize_response(
-            bot_response,
-            mask_pii=False,  # Don't mask bot responses - they should be readable
-            include_disclaimers=False
-        )
-
-        # Step 6: Log interaction
-        AuditLog.log_interaction(
-            action="query_response",
-            user_input=user_input,
-            bot_response=protected_response,
-            contains_pii=PII_Detector.has_pii(user_input)
-        )
-
-        return protected_response
-
+        """Main chatbot interaction method (now using LangGraph)"""
+        return self.orchestrator.process(user_input)
 
 def interactive_chat():
     chatbot = ParkingChatbot()

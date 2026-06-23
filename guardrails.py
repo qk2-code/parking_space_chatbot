@@ -6,15 +6,11 @@ Prevents exposure of sensitive data and detects malicious inputs.
 import re
 from typing import Dict, Tuple
 from transformers import pipeline
+from patterns import LICENSE_PLATE_PATTERN, PHONE_PATTERN, EMAIL_PATTERN, NAME_PATTERN
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-LICENSE_PLATE_PATTERN = r'\b[A-Z]{2}\s?\d{4}\s?[A-Z]{2}\b|[А-Я]{2}\s?\d{4}\s?[А-Я]{2}\b'
-PHONE_PATTERN = r'(?:\+38)?[\s]?[(]?\d{2,3}[)]?[\s]?\d{3}[\s-]?\d{2}[\s-]?\d{2}'
-EMAIL_PATTERN = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-NAME_PATTERN = r'\b[А-Яа-яA-Za-z]+\s+[А-Яа-яA-Za-z]+\b'
 
 
 class PII_Detector:

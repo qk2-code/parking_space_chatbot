@@ -7,39 +7,18 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 import json
+from patterns import LICENSE_PLATE_PATTERN, DATE_PATTERNS, TIME_PATTERNS
+
 
 class ReservationEntityExtractor:
     """Extract reservation-related entities from user input"""
 
-    LICENSE_PLATE_PATTERNS = [
-        r'\b[A-Z]{2}\s?\d{4}\s?[A-Z]{2}\b',  # XX1234XX
-        r'\b[А-Я]{2}\s?\d{4}\s?[А-Я]{2}\b',  # АА1234АА
-        r'\b\d{4}\s?[A-Z]{2}\s?\d{2}\b',     # 1234XX99
-    ]
-
-    DATE_PATTERNS = [
-        r'(\d{2})\.(\d{2})\.(\d{4})',        # DD.MM.YYYY
-        r'(\d{4})-(\d{2})-(\d{2})',          # YYYY-MM-DD
-        r'(\d{2})/(\d{2})/(\d{4})',          # DD/MM/YYYY
-        r'(завтра|tomorrow|сьогодні|today|завтра|the day after tomorrow)',  # relative dates
-    ]
-
-    TIME_PATTERNS = [
-        r'(\d{1,2}):(\d{2})',                 # HH:MM or H:MM
-        r'(\d{1,2})\.(\d{2})',                # HH.MM
-        r'(\d{1,2})\s*:?\s*на\s*ранку',       # Xo in the morning
-        r'(\d{1,2})\s*:?\s*увечері',          # Xo in the evening
-    ]
-
-    NAME_PATTERN = r'\b([А-Яа-яЇїЄєІі][а-яїєіґ]+)(?:\s+([А-Яа-яЇїЄєІі][а-яїєіґ]+))?\b'
-
     @staticmethod
     def extract_license_plate(text: str) -> Optional[str]:
         """Extract license plate from text"""
-        for pattern in ReservationEntityExtractor.LICENSE_PLATE_PATTERNS:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                return match.group(0).upper().replace(" ", "")
+        match = re.search(LICENSE_PLATE_PATTERN, text, re.IGNORECASE)
+        if match:
+            return match.group(0).upper().replace(" ", "")
         return None
 
     @staticmethod
@@ -57,7 +36,7 @@ class ReservationEntityExtractor:
             return (today + timedelta(days=2)).strftime("%Y-%m-%d")
 
         # absolute date patterns
-        for pattern in ReservationEntityExtractor.DATE_PATTERNS:
+        for pattern in DATE_PATTERNS:
             match = re.search(pattern, text)
             if match:
                 try:
@@ -82,7 +61,7 @@ class ReservationEntityExtractor:
     @staticmethod
     def extract_time(text: str) -> Optional[str]:
         """Extract time from text, return as HH:MM"""
-        match = re.search(ReservationEntityExtractor.TIME_PATTERNS[0], text)
+        match = re.search(TIME_PATTERNS[0], text)
         if match:
             hours = int(match.group(1))
             minutes = int(match.group(2))

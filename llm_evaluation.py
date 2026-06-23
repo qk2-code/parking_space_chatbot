@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class PerformanceTest:
+class LLMEvaluation:
     def __init__(self):
         self.chatbot = None
         self.tracker = PerformanceTracker()
@@ -242,7 +242,7 @@ class PerformanceTest:
 
 
 def main():
-    tester = PerformanceTest()
+    tester = LLMEvaluation()
 
     if not tester.initialize_chatbot():
         print("Cannot proceed without chatbot")

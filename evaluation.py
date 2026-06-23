@@ -325,39 +325,3 @@ Data Protection:
 Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         """
         return report.strip()
-
-
-if __name__ == "__main__":
-    print("=== RAG Evaluation Metrics Demo ===\n")
-
-    # Example: Test retrieval metrics
-    print("1. Testing Recall@K and Precision@K:")
-    retrieved = ["doc1", "doc2", "doc3", "doc4", "doc5"]
-    relevant = ["doc1", "doc3", "doc5", "doc6"]
-
-    recall_3 = EvaluationMetrics.recall_at_k(retrieved, relevant, k=3)
-    precision_3 = EvaluationMetrics.precision_at_k(retrieved, relevant, k=3)
-    mrr = EvaluationMetrics.mean_reciprocal_rank(retrieved, relevant)
-    f1 = EvaluationMetrics.f1_score(precision_3, recall_3)
-
-    print(f"   Retrieved: {retrieved}")
-    print(f"   Relevant: {relevant}")
-    print(f"   Recall@3: {recall_3}")
-    print(f"   Precision@3: {precision_3}")
-    print(f"   MRR: {mrr}")
-    print(f"   F1 Score: {f1}\n")
-
-    # Example: Test response accuracy
-    print("2. Testing Response Accuracy:")
-    response = "The parking works 24/7 with a technical break from 3:00 to 3:15 AM"
-    expected_keywords = ["24/7", "3:00", "technical break"]
-
-    is_accurate, matches = ResponseAccuracy.keyword_match(response, expected_keywords, min_matches=2)
-    print(f"   Response: {response}")
-    print(f"   Expected keywords: {expected_keywords}")
-    print(f"   Is accurate: {is_accurate}, Matches: {matches}\n")
-
-    # Example: Performance tracking
-    print("3. Initializing Performance Tracker:")
-    tracker = PerformanceTracker()
-    print("   ✓ Metrics table created")

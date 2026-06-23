@@ -168,25 +168,3 @@ class ReservationEntityExtractor:
         - Duration: {duration} hours
         """
         return summary.strip()
-
-
-if __name__ == "__main__":
-    test_cases = [
-        "Привіт! Я хочу забронювати місце паркування на завтра о 14:30. Мій номер: АА1234АА, зовуть мене Іван Петренко, на 2 години",
-        "Book a spot for today at 10:00. My car is XX1234XX. I'm John Smith.",
-        "Завтра на 15.03.2026 о 19:00 бронював місце. Це для Марія Іванівна, номер ВХ9999СС",
-    ]
-
-    for i, test in enumerate(test_cases, 1):
-        print(f"Test {i}: {test}\n")
-        entities = ReservationEntityExtractor.extract_all_entities(test)
-        is_valid, errors = ReservationEntityExtractor.validate_entities(entities)
-
-        print(f"Extracted entities: {json.dumps(entities, ensure_ascii=False, indent=2)}")
-        print(f"Valid: {is_valid}")
-        if errors:
-            print("Errors:")
-            for error in errors:
-                print(f"  - {error}")
-        else:
-            print(ReservationEntityExtractor.format_reservation_summary(entities))

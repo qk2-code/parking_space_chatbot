@@ -291,16 +291,16 @@ You'll receive a confirmation within 30 minutes."""
         entities = state["entities"]
 
         try:
-            ReservationManager.confirm_reservation(reservation_id)
-
-            AuditLog.log_interaction(
+            reservation = ReservationManager.get_reservation(reservation_id)
+            if reservation.status == "confirmed":
+                AuditLog.log_interaction(
                 action="reservation_confirmed",
                 user_input=state["user_input"],
                 bot_response=f"Reservation #{reservation_id} confirmed",
                 contains_pii=state.get("contains_pii", False)
-            )
+                )
 
-            logger.info(f"[RECORD] ✓ Reservation #{reservation_id} confirmed and recorded")
+                logger.info(f"[RECORD] ✓ Reservation #{reservation_id} confirmed and recorded")
 
             return {
                 "final_response": f"""✅ The reservation was completed successfully!

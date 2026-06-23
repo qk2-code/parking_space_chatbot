@@ -7,7 +7,6 @@ from admin_agent import send_reservation_notification_sync
 from database import ReservationManager, AuditLog
 from entity_extraction import ReservationEntityExtractor
 from guardrails import ResponseGuard
-from main import ParkingChatbot
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class ChatbotState(TypedDict):
 class ParkingChatbotOrchestrator:
     """LangGraph-based orchestrator for parking chatbot workflow"""
 
-    def __init__(self, chatbot: "ParkingChatbot"):
+    def __init__(self, chatbot):
         self.chatbot = chatbot
         self.graph = self._build_graph()
         logger.info("✓ Orchestrator initialized with LangGraph")

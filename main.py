@@ -79,15 +79,15 @@ class ParkingChatbot:
         )
         retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-        template = """Ви — помічник із паркування для сервісу Smart City Park.
-Використовуйте наданий контекст, щоб відповідати на запитання щодо паркування.
-Якщо відповіді немає в контексті, скажіть: «У мене немає інформації з цього приводу. Зверніться до нашої служби підтримки».
-Будьте ввічливими та надавайте вичерпну інформацію. Відповідайте тією ж мовою, якою поставлено запитання.
+        template = """You are a parking assistant for the Smart City Park service.
+Use the provided context to answer questions about parking.
+If the answer is not in the context, say: 'I do not have information on this matter. Please contact our support team.'
+Be polite and provide comprehensive information. Respond in the same language in which the question was asked.
 
-контекст: {context}
-запитання: {question}
+context: {context}
+question: {question}
 
-відповідь:"""
+answer:"""
 
         prompt = ChatPromptTemplate.from_template(template)
 
@@ -190,10 +190,10 @@ class ParkingChatbot:
         return {
             "status": "success",
             "reservation_id": reservation_id,
-            "message": f"""✅ Резервування успішно створено!
+            "message": f"""✅ Reservation was created successfully!
             
-            Номер резервування: #{reservation_id}{ReservationEntityExtractor.format_reservation_summary(entities)}
-            Наш адміністратор розглянет ваш запит. Ви отримаєте підтвердження протягом 30 хвилин."""
+            Reservation number: #{reservation_id}{ReservationEntityExtractor.format_reservation_summary(entities)}
+            Our admin will review your request. You'll receive a confirmation within 30 minutes."""
         }
 
     def chat(self, user_input: str) -> str:
@@ -214,7 +214,7 @@ def interactive_chat():
                 continue
 
             if user_input.lower() == "exit":
-                print("Bot: Дякуємо за звернення! До побачення!")
+                print("Bot: Thanks for the interactions! Goodbye")
                 break
 
             if user_input.lower() == "history":
@@ -233,7 +233,7 @@ def interactive_chat():
                 print(f"Bot: {response}\n")
 
         except KeyboardInterrupt:
-            print("\n\nBot: Сесія завершена.")
+            print("\n\nBot: The session has ended.")
             break
         except Exception as e:
             logger.error(f"Chat error: {e}")

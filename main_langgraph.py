@@ -266,8 +266,8 @@ class ParkingChatbotOrchestrator:
             return {
                 "admin_decision": "pending",
                 "reservation_id": reservation_id,
-                "final_response": f"""⏳ Резервування № {reservation_id} очікує на схвалення адміністратором.
-Ви отримаєте підтвердження протягом 30 хвилин."""
+                "final_response": f"""⏳ Reservation № {reservation_id} is waiting for admin approval.
+You'll receive a confirmation within 30 minutes."""
             }
 
         except Exception as e:
@@ -304,10 +304,10 @@ class ParkingChatbotOrchestrator:
             logger.info(f"[RECORD] ✓ Reservation #{reservation_id} confirmed and recorded")
 
             return {
-                "final_response": f"""✅ Резервування успішно підтверджено!
+                "final_response": f"""✅ The reservation was completed successfully!
 
-Номер резервування: #{reservation_id}{ReservationEntityExtractor.format_reservation_summary(entities)}
-Дякуємо за користування послугою Smart City Park!"""
+Reservation number: #{reservation_id}{ReservationEntityExtractor.format_reservation_summary(entities)}
+Thanks for using Smart City Park!"""
             }
 
         except Exception as e:
